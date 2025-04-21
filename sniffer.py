@@ -10,12 +10,10 @@ from ctypes import *
 import IPv6_modes
 import Mac_modes
 import Ip_modes
-import cipher
+import ciphers
 import send
-import argparse
 import requests
 import json
-
 class pcap_pkthdr(ctypes.Structure):
     _fields_ = [("ts_sec", ctypes.c_long),
                 ("ts_usec", ctypes.c_long),
@@ -67,15 +65,18 @@ def process_pcap():
     global pcap_filename
     last_pcap_name=pcap_filename
     pcap_filename=get_pcap_name()
-    filename=cipher.ciphers_modes.get(cipher)(last_pcap_name)
+    filename=ciphers.ciphers_modes.get(cipher)(last_pcap_name)
     for loc in location:
-        send.send_modes.get(loc)(filename)
+        try:
+            send.send_modes.get(loc)(filename)
+        except Exception as e:
+            continue
     if not disk:
         os.remove(filename)
 
 def rotation():
     global last_pcap_time,pcap_filename
-    while not cipher_event.is_set():
+    while not event.is_set() or not sni.empty(): 
         if (size) and (os.path.exists(pcap_filename) and (os.path.getsize(pcap_filename)) > size):
             if rotate:
                 last_pcap_time=time.time()
@@ -148,7 +149,7 @@ def stadistics():
         URL="http://"+host+":"+str(port)+"/monitorize/api/stats/"
         hostname=os.uname().nodename
 
-    while cipher_event:
+    while not cipher_event.is_set():
         elapsed_time = time.time() - start_time
         stats_data = {
             "elapsed_time": format_time(elapsed_time),
@@ -161,9 +162,9 @@ def stadistics():
         for session_key, session_data in list(session_dict.items()):
             session_info = {
                 "protocol": session_key[0],
-                "src_ip": session_key[1],
+                "src_ip": str(session_key[1]),
                 "src_port": session_key[2],
-                "dst_ip": session_key[3],
+                "dst_ip": str(session_key[3]),
                 "dst_port": session_key[4],
                 "packet_count": session_data["packet count"],
                 "total_size_kb": session_data["total_size"] / 1024
@@ -301,7 +302,7 @@ if __name__ == "__main__":
         filter_bpf=config.get('General','BPF',fallback="")
         size=match_regular_expression_size(config.get('General','Size',fallback=None))
         protocols=validate_protocols(config.get('General','Protocols',fallback=None))
-        cipher=valid_option(config,'General','Cipher',"none",list(cipher.ciphers_modes.keys()))
+        cipher=valid_option(config,'General','Cipher',"none",list(ciphers.ciphers_modes.keys()))
         disk=config.getboolean('General','Disk',fallback=True)
         location=validate_send(config.get('General','Send',fallback=None))
         stats_thread = threading.Thread(target=stadistics, daemon=True)
