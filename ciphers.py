@@ -55,7 +55,7 @@ def pcap_gpg(pcap_name):
 
     os.removedirs(os.path.splitext(pcap_name)[0]+"/")
     os.remove(pcap_name)
-    return os.path.splitext(pcap_name)[0]+".zip"
+    return "encrypted_"+os.path.splitext(pcap_name)[0]+".zip"
 
 ciphers_modes={
     "ZIP" : pcap_zip,

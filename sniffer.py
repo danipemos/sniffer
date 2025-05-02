@@ -11,9 +11,10 @@ import IPv6_modes
 import Mac_modes
 import Ip_modes
 import ciphers
-import send
+import send_pcap
 import requests
 import json
+from zabbix_utils import Sender,ItemValue
 class pcap_pkthdr(ctypes.Structure):
     _fields_ = [("ts_sec", ctypes.c_long),
                 ("ts_usec", ctypes.c_long),
@@ -35,8 +36,6 @@ event = threading.Event()
 packetQueue=queue.Queue()
 cipher_event= threading.Event()
 list_protocols=["IP","IPv6","MAC"]
-
-list_send=["WEB","DISK","FTP","S3","WEBDAV","SFTP","SCP"]
 
 headers = {
     "ip": [IP],
@@ -61,16 +60,17 @@ def get_pcap_name():
 pcap_filename=get_pcap_name()
 
 
-def process_pcap():
+def process_pcap(finish):
     global pcap_filename
     last_pcap_name=pcap_filename
-    pcap_filename=get_pcap_name()
+    if not finish:
+        pcap_filename=get_pcap_name()
     filename=ciphers.ciphers_modes.get(cipher)(last_pcap_name)
     for loc in location:
         try:
-            send.send_modes.get(loc)(filename)
+            send_pcap.send_modes.get(loc)(filename)
         except Exception as e:
-            continue
+            print("Error trying to send the pcap via "+str(loc)+str(e))
     if not disk:
         os.remove(filename)
 
@@ -80,16 +80,16 @@ def rotation():
         if (size) and (os.path.exists(pcap_filename) and (os.path.getsize(pcap_filename)) > size):
             if rotate:
                 last_pcap_time=time.time()
-            process_pcap()
+            process_pcap(False)
         if rotate and ((time.time()-last_pcap_time)>rotate):
             last_pcap_time=time.time()
-            process_pcap()
+            process_pcap(False)
         if packages_pcap and (os.path.exists(pcap_filename) and (count_packets_pcap()>= packages_pcap)):
             if rotate:
                 last_pcap_time=time.time()
-            process_pcap()
+            process_pcap(False)
         time.sleep(0.01)
-    process_pcap()
+    process_pcap(True)
     cipher_event.set()
 
 def procces_packet(packet):
@@ -149,6 +149,15 @@ def stadistics():
         URL="http://"+host+":"+str(port)+"/monitorize/api/stats/"
         hostname=os.uname().nodename
 
+    if config.has_section('ZABBIX'):
+        host=config.get('ZABBIX','Server')
+        port=config.getint('ZABBIX','Port',fallback=10051)
+        hostname=os.uname().nodename
+        sender = Sender(
+            server='localhost',
+            port=10051,
+        config_path='/etc/zabbix/zabbix_agent2.conf')
+
     while not cipher_event.is_set():
         elapsed_time = time.time() - start_time
         stats_data = {
@@ -172,8 +181,33 @@ def stadistics():
             stats_data["sessions"].append(session_info)
         if event.is_set():
             stats_data["processing_packets"] = "Processing last packets"
-        if config.has_section('WEB'):
-            requests.post(f"{URL}{hostname}/",json.dumps(stats_data), headers={"Content-Type": "application/json"})
+        if config.has_section('ZABBIX') or config.has_section('WEB'):
+            hostname=os.uname().nodename
+            if config.has_section('WEB'):
+                host=config.get('WEB','Server')
+                port=config.getint('WEB','Port',fallback=80)
+                URL="http://"+host+":"+str(port)+"/monitorize/api/stats/"
+
+                try:
+                    requests.post(f"{URL}{hostname}/",json.dumps(stats_data), headers={"Content-Type": "application/json"})
+                except Exception as e:
+                    print(f"Error sending stadistics to server: {e}")
+            if config.has_section('ZABBIX'):
+                host=config.get('ZABBIX','Server')
+                port=config.getint('ZABBIX','Port',fallback=10051)
+                hostname=os.uname().nodename
+                sender = Sender(
+                    server=host,
+                    port=port,
+                config_path='/etc/zabbix/zabbix_agent2.conf')
+                items=[
+                    ItemValue(hostname,"sniffer.protocol",json.dumps(stats_data["total_packets"])),
+                    ItemValue(hostname,"sniffer.bandwidth",stats_data["bandwidth_mbps"]),
+                    ItemValue(hostname,"sniffer.mb",stats_data["total_megabytes"]),
+                    ItemValue(hostname,"sniffer.time",stats_data["elapsed_time"]),
+                    ItemValue(hostname,"sniffer.sessions",json.dumps(stats_data["sessions"])),
+                ]
+                sender.send(items)
         else:
             print(stats_data)
         time.sleep(0.1)
@@ -264,14 +298,14 @@ def validate_protocols(protocols):
     if set(lista).issubset(list_protocols):
         return lista
     else:
-        argparse.ArgumentTypeError(f"Protocols must be a combination of {', '.join(list_protocols)}")
+        raise argparse.ArgumentTypeError(f"Protocols must be a combination of {', '.join(list_protocols)}")
 
 def validate_send(send):
     lista=send.split(",") if send else []
-    if set(lista).issubset(list_send):
+    if set(lista).issubset(send_pcap.send_modes.keys()):
         return lista
     else:
-        argparse.ArgumentTypeError(f"Send must be a combination of {', '.join(list_send)}")
+        raise argparse.ArgumentTypeError(f"Send must be a combination of {', '.join(send_pcap.send_modes.keys())}")
 
 def print_help_file():
     help_file = "help.txt" 
