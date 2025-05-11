@@ -115,12 +115,12 @@ void start_capture(char* interface, char* filter, int timeout,int total_packages
 
     if (bpf_filter != NULL) {
         if (pcap_compile(handle, &fp, filter, 0, PCAP_NETMASK_UNKNOWN) == -1) {
-            fprintf(stderr, "No se pudo compilar el filtro BPF: %s\n", pcap_geterr(handle));
+            fprintf(stderr, "Could not compile the BPF filter: %s\n", pcap_geterr(handle));
             pcap_close(handle);
             return;
         }
         if (pcap_setfilter(handle, &fp) == -1) {
-            fprintf(stderr, "No se pudo aplicar el filtro BPF: %s\n", pcap_geterr(handle));
+            fprintf(stderr, "Could not apply the BPF filter: %s\n", pcap_geterr(handle));
             pcap_close(handle);
             return;
         }

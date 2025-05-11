@@ -8,15 +8,15 @@ mac_mapping = {}
 counter = 1
 config=configparser.ConfigParser()
 config.read('config.ini')
-hashIpv6=config.get('General','HashMAC',fallback='Secreto')
+hashIpv6=config.get('General','HashMac',fallback='Secreto')
 
 def hash(packet):
     if Ether in packet:
         mac_src = packet[Ether].src
         mac_dst = packet[Ether].dst
         
-        hashed_mac_src = hmac.new(b'secreto', mac_src.encode(), hashlib.sha256).hexdigest()
-        hashed_mac_dst = hmac.new(b'secreto', mac_dst.encode(), hashlib.sha256).hexdigest()
+        hashed_mac_src = hmac.new(hashIpv6.encode(), mac_src.encode(), hashlib.sha256).hexdigest()
+        hashed_mac_dst = hmac.new(hashIpv6.encode(), mac_dst.encode(), hashlib.sha256).hexdigest()
         
         packet[Ether].src = ':'.join(hashed_mac_src[i:i+2] for i in range(0, 12, 2))
         packet[Ether].dst = ':'.join(hashed_mac_dst[i:i+2] for i in range(0, 12, 2))

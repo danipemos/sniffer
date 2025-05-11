@@ -1,11 +1,7 @@
 import os
 import pyzipper
 import configparser
-from Cryptodome.Cipher import AES
-from Cryptodome.Random import get_random_bytes
-from Cryptodome.Util.Padding import pad
-from Cryptodome.PublicKey import RSA
-from Cryptodome.Cipher import PKCS1_v1_5
+import gnupg
 
 config=configparser.ConfigParser()
 config.read('config.ini')
@@ -21,41 +17,19 @@ def pcap_zip(pcap_name):
 
 def pcap_gpg(pcap_name):
     gpgkey=config.get('General','GPGKey')
-    with open(gpgkey, 'rb') as pubkey:
-        public_key=RSA.import_key(pubkey.read())
-    key=get_random_bytes(32)
-    encripted_file= os.path.splitext(pcap_name)[0]+"/encripted.pcap"
-    with open(pcap_name, 'rb') as pcap:
-        data=pcap.read()
-    os.makedirs(os.path.splitext(pcap_name)[0])
-
-    iv=get_random_bytes(AES.block_size)
-    cipher=AES.new(key, AES.MODE_CBC, iv)
-    data_filled=pad(data,AES.block_size)
-    encrypted_data=cipher.encrypt(data_filled)
-    iv_file=os.path.splitext(pcap_name)[0]+"/iv.bin"
-
-    with open(iv_file ,'w')as iv_file:
-        iv_file.write(iv.hex())
-
-    with open(encripted_file, 'wb') as encripted:
-        encripted.write(encrypted_data)
-
-    cipher=PKCS1_v1_5.new(public_key)
-    encrypted_key=cipher.encrypt(key)
-
-    encrypted_key_file = os.path.splitext(pcap_name)[0]+'/'+'encrypted_key.bin'
-    with open(encrypted_key_file,'wb') as encripted_key_file:
-        encripted_key_file.write(encrypted_key)
-    
-    with pyzipper.ZipFile("encrypted_"+os.path.splitext(pcap_name)[0]+".zip",'w',compression=pyzipper.ZIP_DEFLATED,allowZip64=True) as zip:
-        for file in os.listdir(os.path.splitext(pcap_name)[0]+"/"):
-            zip.write(os.path.splitext(pcap_name)[0]+"/"+file,arcname=file)
-            os.remove(os.path.splitext(pcap_name)[0]+"/"+file)
-
-    os.removedirs(os.path.splitext(pcap_name)[0]+"/")
-    os.remove(pcap_name)
-    return "encrypted_"+os.path.splitext(pcap_name)[0]+".zip"
+    gpg = gnupg.GPG()
+    with open(pcap_name, 'rb') as f:
+        estado = gpg.encrypt_file(
+            f,
+            recipients=[gpgkey],
+            output="GPG_encrypted_"+pcap_name,
+            always_trust=True,
+        )
+    if estado.ok:
+        os.remove(pcap_name)
+        return "GPG_encrypted_"+pcap_name
+    else:
+        raise Exception("Error encrypting with GPG: " + estado.status)
 
 ciphers_modes={
     "ZIP" : pcap_zip,

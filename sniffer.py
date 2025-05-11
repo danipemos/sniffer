@@ -158,7 +158,10 @@ def stadistics():
             port=10051,
         config_path='/etc/zabbix/zabbix_agent2.conf')
 
-    while not cipher_event.is_set():
+    final_iteration = True
+    while not cipher_event.is_set() or final_iteration:
+        if cipher_event.is_set():
+            final_iteration = False
         elapsed_time = time.time() - start_time
         stats_data = {
             "elapsed_time": format_time(elapsed_time),
@@ -247,7 +250,7 @@ def valid_option(config,section,option,fallback,valid_values):
         raise ValueError(f"'{option}' must be one of {valid_values}, providied '{value}'")
     return value
 
-def finish(signum,frame):
+def finish():
     event.set()
     while not cipher_event.is_set():
         time.sleep(0.1)
@@ -319,11 +322,11 @@ if __name__ == "__main__":
     parser.format_help = print_help_file
     args = parser.parse_args()
     config=configparser.ConfigParser()
-    sni=ctypes.CDLL("/home/kali/Desktop/TFG-main/liba.so")
+    sni=ctypes.CDLL("/usr/lib/liba.so")
     configure_c()
     try:
-        config.read('config.ini')
-        mode=valid_option(config,'General','Mode','map',list(Ip_modes.anon.keys()))
+        config.read('/etc/sniffer/config.ini')
+        mode=valid_option(config,'General','IPMode','map',list(Ip_modes.anon.keys()))
         header_ptr=valid_option(config,'General','Header','none',list(headers.keys()))
         interface=valid_option(config,'General','Interface','eth0',get_if_list())
         macmode=valid_option(config,'General','MacMode','map',list(Mac_modes.modesMac.keys()))
@@ -335,7 +338,7 @@ if __name__ == "__main__":
         rotate=match_regular_expression_time(config.get('General','RotateTime',fallback=None))
         filter_bpf=config.get('General','BPF',fallback="")
         size=match_regular_expression_size(config.get('General','Size',fallback=None))
-        protocols=validate_protocols(config.get('General','Protocols',fallback=None))
+        protocols=validate_protocols(config.get('General','Protocols',fallback="IP,IPv6,MAC"))
         cipher=valid_option(config,'General','Cipher',"none",list(ciphers.ciphers_modes.keys()))
         disk=config.getboolean('General','Disk',fallback=True)
         location=validate_send(config.get('General','Send',fallback=None))
@@ -346,7 +349,7 @@ if __name__ == "__main__":
         rotate_thread= threading.Thread(target=rotation, daemon=True)
         rotate_thread.start()
         sniffing()
-        finish(None,None)
+        finish()
         sni.free_queue()
         sys.exit(0)
     except Exception as e:

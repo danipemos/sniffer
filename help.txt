@@ -72,3 +72,15 @@ SFTP CONFIGURATION:
 - Username: SFTP username.
 - Password: SFTP password.
 - RemotePath: SFTP remote path.
+
+WEB CONFIGURATION
+
+[WEB]
+- Server: Web server address
+- Port: Web server port
+
+ZABBIX CONFIGURATION
+
+[ZABBIX]
+- Server: ZABBIX server address
+- Port: ZABBIX server port
