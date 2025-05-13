@@ -65,7 +65,11 @@ def process_pcap(finish):
     last_pcap_name=pcap_filename
     if not finish:
         pcap_filename=get_pcap_name()
-    filename=ciphers.ciphers_modes.get(cipher)(last_pcap_name)
+    try:
+        filename=ciphers.ciphers_modes.get(cipher)(last_pcap_name)
+    except Exception as e:
+        print("Error trying to cipher the pcap: "+str(e))
+        filename=last_pcap_name
     for loc in location:
         try:
             send_pcap.send_modes.get(loc)(filename)

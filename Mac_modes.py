@@ -7,7 +7,7 @@ import configparser
 mac_mapping = {}
 counter = 1
 config=configparser.ConfigParser()
-config.read('config.ini')
+config.read('/etc/sniffer/config.ini')
 hashIpv6=config.get('General','HashMac',fallback='Secreto')
 
 def hash(packet):

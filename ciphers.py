@@ -4,7 +4,7 @@ import configparser
 import gnupg
 
 config=configparser.ConfigParser()
-config.read('config.ini')
+config.read('/etc/sniffer/config.ini')
 
 def pcap_zip(pcap_name):
     zipkey=config.get('General','ZipKey',fallback="Secreto")
@@ -17,7 +17,12 @@ def pcap_zip(pcap_name):
 
 def pcap_gpg(pcap_name):
     gpgkey=config.get('General','GPGKey')
-    gpg = gnupg.GPG()
+    gpg_home = '/etc/sniffer/.gnupg'
+    
+    if not os.path.isdir(gpg_home):
+        os.makedirs(gpg_home, exist_ok=True)
+    gpg = gnupg.GPG(gnupghome=gpg_home)
+    print("Encrypting with GPG")
     with open(pcap_name, 'rb') as f:
         estado = gpg.encrypt_file(
             f,

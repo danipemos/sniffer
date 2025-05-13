@@ -6,7 +6,7 @@ import hmac
 ip_mapping = {}
 counter = 1
 config=configparser.ConfigParser()
-config.read('config.ini')
+config.read('/etc/sniffer/config.ini')
 hashipv4=config.get('General','HashIpv4',fallback='Secreto')
 
 

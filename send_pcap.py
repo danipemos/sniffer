@@ -13,7 +13,7 @@ auth_method={"Basic": HTTPBasicAuth,
 
 
 config=configparser.ConfigParser()
-config.read('config.ini')
+config.read('/etc/sniffer/config.ini')
 
 def ftp(file):
     host=config.get('FTP','Server')
