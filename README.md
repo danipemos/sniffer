@@ -1,4 +1,4 @@
-# Titulo
+# SNIFFER
 
 ## Description
 Sniffer designed in Python using the libraries Scapy and Pcapy, focusing on data protection, security, and privacy. This tool is intended to be executed as a service. The sniffer's configuration is located in the /etc/sniffer/config.ini folder. The options for the tool are explained in (help.txt). Capture files will be stored in /etc/sniffer/captures. To manipulate the capture files and the config.ini as a local user of the machine, add this user to the sniffer group.
