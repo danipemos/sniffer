@@ -24,7 +24,7 @@ Sniffer designed in Python using the libraries Scapy and Pcapy, focusing on data
    ```bash
    chmod +x setup.sh
    ./setup.sh
-3. If you will use sniffer-web(https://github.com/danipemos/sniffer-WEB) then change the /home/sniffer/config.ini file to add WEB and VPN parameters and execute:
+3. If you will use [sniffer-web](https://github.com/danipemos/sniffer-WEB) then change the /home/sniffer/config.ini file to add WEB and VPN parameters and execute:
    ```bash
    python access_web.py
 ## LICENSE
