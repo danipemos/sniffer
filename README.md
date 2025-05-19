@@ -18,11 +18,14 @@ Sniffer designed in Python using the libraries Scapy and Pcapy, focusing on data
 ## Instalation
 1. Clone the repository
    ```bash
-   poner link
-   cd carpeta
+   git clone https://github.com/danipemos/sniffer.git
+   cd sniffer
 2. Execute the setup.sh script. This is script is made for Raspibian OS
    ```bash
+   chmod +x setup.sh
    ./setup.sh
-   
+3. If you will use sniffer-web(https://github.com/danipemos/sniffer-WEB) then change the /home/sniffer/config.ini file to add WEB and VPN parameters and execute:
+   ```bash
+   python access_web.py
 ## LICENSE
 GNU General Public License v3.0 or later. See the [LICENSE](LICENSE) file for details.
