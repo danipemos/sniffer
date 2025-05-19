@@ -1,0 +1,109 @@
+zabbix_export:
+  version: '7.2'
+  templates:
+    - uuid: 8300cc7f53cb4b2fb7834c644e8b22c6
+      template: 'Template Sniffer'
+      name: 'Template Sniffer'
+      groups:
+        - name: 'Templates/Applications'
+      templates:
+        - name: 'Linux by Zabbix agent'
+      items:
+        - uuid: 7eb8df6b5def4dbfa1f7248c1962546e
+          name: 'sniffer average bandwith'
+          type: TRAP
+          key: sniffer.bandwidth
+          trends: '0'
+          units: MB/s
+        - uuid: f7800c4ccf8a45b7a8a6d1f14abc6cfd
+          name: 'sniffer MB'
+          type: TRAP
+          key: sniffer.mb
+          trends: '0'
+          units: MB
+        - uuid: 5e3d77343f7547738140a22e8dec756d  
+          name: 'sniffer packets per protocol'
+          type: TRAP
+          key: sniffer.protocol
+          value_type: TEXT
+          preprocessing:
+            - type: JAVASCRIPT
+              parameters:
+                - |
+                  var data = JSON.parse(value);
+                  var result = "";
+                  for (var key in data) {
+                    result += key + ": " + data[key] + "\n";
+                  }
+                  return result;
+        - uuid: 1cc84b2d3c0c441e812af7ee65ecd1d3        
+          name: 'sniffer sessions'
+          type: TRAP
+          key: sniffer.sessions
+          value_type: TEXT
+          preprocessing:
+            - type: JAVASCRIPT
+              parameters:
+                - |
+                  function generateSessionsString(sessions) {
+                      var result = '';
+                      for (var i = 0; i < sessions.length; i++) {
+                          var session = sessions[i];
+                          result += session.protocol + ' ' + session.src_ip + session.src_port +
+                                    ' -> ' + session.dst_ip + session.dst_port +
+                                    ' Packets: ' + session.packet_count +
+                                    ' Size: ' + session.total_size_kb + ' KB\n';
+                      }
+                      return result;
+                  }
+
+                  var sessions_json = JSON.parse(value);
+                  var sessions_str = generateSessionsString(sessions_json);
+                  return sessions_str;
+        - uuid: 6e9222a0f58046b38d007ebb5a3cbb00          
+          name: 'sniffer time'
+          type: TRAP
+          key: sniffer.time
+          value_type: TEXT
+        - uuid: c4aecddccb4f478093b657d899dcd2ee  
+          name: '{$UNIT.NAME} state'
+          type: DEPENDENT
+          key: 'systemd.service.active_state["{$UNIT.NAME}"]'
+          preprocessing:
+            - type: JSONPATH
+              parameters:
+                - $.ActiveState.state
+            - type: DISCARD_UNCHANGED_HEARTBEAT
+              parameters:
+                - 30m
+          master_item:
+            key: 'systemd.unit.get["{$UNIT.NAME}"]'
+          triggers:
+            - uuid: 8a3e9ba7f17345c39316bc5ec50eb2a4          
+              expression: 'last(/Template Sniffer/systemd.service.active_state["{$UNIT.NAME}"])<>1'
+              name: '{$UNIT.NAME} is not running'
+              priority: INFO
+        - uuid: 9087904ea52444c0b5250b4a11b53dd4      
+          name: '{$UNIT.NAME} uptime'
+          type: DEPENDENT
+          key: 'systemd.service.uptime["{$UNIT.NAME}"]'
+          value_type: FLOAT
+          units: s
+          preprocessing:
+            - type: JAVASCRIPT
+              parameters:
+                - |
+                  data = JSON.parse(value);
+                  if (data.ActiveEnterTimestamp > data.ActiveExitTimestamp) {
+                    return Math.floor(Date.now() / 1000) - Number(data.ActiveEnterTimestamp) / 1000000;
+                  }
+                  return null;
+          master_item:
+            key: 'systemd.unit.get["{$UNIT.NAME}"]'
+        - uuid: 44127ae0764f4528850da1e73db8d2f3
+          name: 'Get service {$UNIT.NAME}'
+          key: 'systemd.unit.get["{$UNIT.NAME}"]'
+          value_type: TEXT
+      macros:
+        - macro: '{$UNIT.NAME}'
+          value: sniffer.service

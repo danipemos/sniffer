@@ -1,0 +1,94 @@
+USE:
+python sniffer.py 
+
+DESCRIPTION:
+This script capture, anonimize y cipher network packets following the configuration provided in 'config.ini'. 
+Can be configurated to execute as a service and supports different protocols, anonymity modes, and cipher modes.
+
+CONFIGURATION:
+Configuration is done via the 'config.ini' file. The following options are described:
+
+[General]
+- IPMode:        Anonimation mode for Ipv4 ('map', 'hash', 'zero').
+- Header:      Erase payload from the spcedicifed protocols  ('none', 'ip', 'ipv6', 'network', 'tcp', 'udp', 'icmp', 'transport', 'dns').
+- Interface:   Especifies network interface (example: 'eth0').
+- MacMode:     Anonimation mode for MAC ('map', 'hash', 'zero').
+- IPv6Mode:    Anonimation mode for IPv6 ('map', 'hash', 'zero').
+- Timeout:     Time limit for capture (ejemplo: '5D', '2H', '30M', '5D2H').
+- TotalPackages: Total limit of packets to be captured.
+- TotalLenght: Total limit of data in bytes to be captured ('5K', '8.9M', '100.25G').
+- PackagesPcap: Package limit per pcap file.
+- RotateTime:  Time to rotate pcap files ('5D', '2H', '30M', '5D2H).
+- BPF:         BPF filter for packet capture.
+- Size:        Maximum size of each pcap file  ('5K', '8.9M', '100.25G').
+- Protocols:   Protocolos to anonimize ('IP', 'IPv6', 'MAC').
+- Cipher:      Type of cipher ('none', 'ZIP', 'GPG').
+- GPGKey:      Public key for GPG encryption (only if Cipher='GPG').
+- ZipKey:      ZIP encryption password (only if Cipher='ZIP').
+- HashIpv4:    Hashing key for IPv4 (only if Mode=hash).
+- HashMAC:     Hashing key for MAC (only if MacMode=hash).
+- HashIPv6:    Hashing key for MAC (only if Ipv6Mode=hash).
+- Disk:        Store the captured packets in disk (True/False).
+- DiskPath:    Directory where the captured packets will be stored if Disk=True
+- Send:        Send captured packets to a remote server using one or more of these protocols (FTP,S3,WEBDAV,SCP,SFTP). Each protocol has a section in the config file to configure it.
+
+FTP CONFIGURATION:
+
+[FTP]
+- Server: FTP server address.
+- Username: FTP username.
+- Password: FTP password.
+- RemotePath: FTP remote path.
+
+S3 CONFIGURATION:
+
+[S3]
+- BucketName: S3 BucketName.
+- AccessKey: S3 access key.
+- SecretKey: S3 secret key.
+
+WEBDAV CONFIGURATION:
+
+[WEBDAV]
+- Server: WEBDAV server address.
+- Username: WEBDAV username.
+- Password: WEBDAV password.
+- RemotePath: WEBDAV remote path.
+- Port: WEBDAV port.
+- Protocol: WEBDAV protocol (http, https).
+- Auth: WEBDAV authentication (basic, digest).
+
+SCP CONFIGURATION:
+
+[SCP]
+- Server: SCP server address.
+- Username: SCP username.
+- Password: SCP password.
+- RemotePath: SCP remote path.
+
+SFTP CONFIGURATION:
+
+[SFTP]
+- Server: SFTP server address.
+- Username: SFTP username.
+- Password: SFTP password.
+- RemotePath: SFTP remote path.
+
+WEB CONFIGURATION
+
+[WEB]
+- Server: Web server address
+- Port: Web server port
+
+ZABBIX CONFIGURATION
+
+[ZABBIX]
+- Server: ZABBIX server address
+- Port: ZABBIX server port
+
+VPN CONFIGURATION
+
+[VPN]
+- Server: VPN server address
+- Port: VPN server port
+- Password: VPN server password
