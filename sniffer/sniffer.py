@@ -38,7 +38,6 @@ session_dict={}
 event = threading.Event()
 packetQueue=queue.Queue()
 cipher_event= threading.Event()
-list_protocols=["IP","IPv6","MAC"]
 
 headers = {
     "ip": [IP],
@@ -104,15 +103,15 @@ def procces_packet(packet):
     packet_counter["Total Packets"]+=1
     src_ip = None
     dst_ip = None
-    if "MAC" in protocols:
+    if anonymize:
         packet=Mac_modes.modesMac.get(macmode)(packet)
     if IP in packet:
-        if "IP" in protocols:
+        if anonymize:
             packet = Ip_modes.anon.get(mode)(packet)
         src_ip = packet["IP"].src
         dst_ip = packet["IP"].dst
     if IPv6 in packet:
-        if "IPv6" in protocols:
+        if anonymize:
             packet = IPv6_modes.modes6.get(ipv6mode)(packet)
         src_ip = packet["IPv6"].src
         dst_ip = packet["IPv6"].dst
@@ -288,12 +287,6 @@ def configure_c():
     sni.free_packet.argtypes=[ctypes.POINTER(Packet)]
     sni.start_capture.argtypes=[ctypes.c_char_p,ctypes.c_char_p,ctypes.c_int,ctypes.c_int,ctypes.c_int]
 
-def validate_protocols(protocols):
-    lista = protocols.split(",") if protocols else []
-    if set(lista).issubset(list_protocols):
-        return lista
-    else:
-        raise argparse.ArgumentTypeError(f"Protocols must be a combination of {', '.join(list_protocols)}")
 
 def validate_send(send):
     lista=send.split(",") if send else []
@@ -329,7 +322,7 @@ if __name__ == "__main__":
         rotate=match_regular_expression_time(config.get('General','RotateTime',fallback=None))
         filter_bpf=config.get('General','BPF',fallback="")
         size=match_regular_expression_size(config.get('General','Size',fallback=None))
-        protocols=validate_protocols(config.get('General','Protocols',fallback="IP,IPv6,MAC"))
+        anonymize=config.getboolean('General','Anonymize',fallback=True)
         cipher=valid_option(config,'General','Cipher',"none",list(ciphers.ciphers_modes.keys()))
         disk=config.getboolean('General','Disk',fallback=True)
         if disk:

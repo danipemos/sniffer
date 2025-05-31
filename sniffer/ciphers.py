@@ -44,7 +44,7 @@ def pcap_gpg(pcap_name):
         raise Exception("Error encrypting with GPG: " + estado.status)
 
 ciphers_modes={
-    "ZIP" : pcap_zip,
+    "AES" : pcap_zip,
     "GPG" : pcap_gpg,
     "none" : lambda pcap_name : pcap_name
 }

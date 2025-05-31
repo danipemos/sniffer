@@ -9,7 +9,8 @@ CONFIGURATION:
 Configuration is done via the 'config.ini' file. The following options are described:
 
 [General]
-- IPMode:        Anonimation mode for Ipv4 ('map', 'hash', 'zero').
+- Anonymize:   Anonymize the captured packets (True/False).
+- IPMode:      Anonimation mode for Ipv4 ('map', 'hash', 'zero').
 - Header:      Erase payload from the spcedicifed protocols  ('none', 'ip', 'ipv6', 'network', 'tcp', 'udp', 'icmp', 'transport', 'dns').
 - Interface:   Especifies network interface (example: 'eth0').
 - MacMode:     Anonimation mode for MAC ('map', 'hash', 'zero').
@@ -21,7 +22,6 @@ Configuration is done via the 'config.ini' file. The following options are descr
 - RotateTime:  Time to rotate pcap files ('5D', '2H', '30M', '5D2H).
 - BPF:         BPF filter for packet capture.
 - Size:        Maximum size of each pcap file  ('5K', '8.9M', '100.25G').
-- Protocols:   Protocolos to anonimize ('IP', 'IPv6', 'MAC').
 - Cipher:      Type of cipher ('none', 'ZIP', 'GPG').
 - GPGKey:      Public key for GPG encryption (only if Cipher='GPG').
 - ZipKey:      ZIP encryption password (only if Cipher='ZIP').
