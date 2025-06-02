@@ -49,7 +49,6 @@ ExecStartPre=/bin/bash -c 'while true; do \
 done'
 ExecStart=/bin/python /opt/sniffer/sniffer.py
 WorkingDirectory=/home/sniffer/captures
-Restart=always
 User=sniffer
 Group=sniffer
 TimeoutStopSec=infinity
