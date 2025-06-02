@@ -16,7 +16,6 @@ import requests
 import json
 from zabbix_utils import Sender,ItemValue
 import config_search
-import access_web
 import re
 class pcap_pkthdr(ctypes.Structure):
     _fields_ = [("ts_sec", ctypes.c_long),
