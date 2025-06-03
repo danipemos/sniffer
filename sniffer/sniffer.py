@@ -136,7 +136,8 @@ def procces_packet(packet):
                 packet_counter[f"Total Packets {protocol.__name__}"] += 1  
                 if protocol in header_del_list :
                     packet[protocol].remove_payload()
-    wrpcap(pcap_filename,packet,append=True,sync=True)
+    if any(protocol in packet for protocol in protocol_list):
+        wrpcap(pcap_filename, packet, append=True, sync=True)
     
 def format_time(seconds):
     hrs, rem = divmod(seconds, 3600)
