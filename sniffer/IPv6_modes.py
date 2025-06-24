@@ -45,7 +45,7 @@ def zero(packet):
     return packet  
 
 modes6 = {
-    "map": map,
+    "first-seen": map,
     "hash": hash,
     "zero": zero,
 }
