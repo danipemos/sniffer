@@ -43,7 +43,7 @@ def zero(packet):
     return packet  
 
 anon = {
-    "map": map,
+    "first-seen": map,
     "hash": hash,
     "zero": zero,
 }
