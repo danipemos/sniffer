@@ -49,7 +49,7 @@ def zero(packet):
     return packet
 
 modesMac = {
-    "map": map,
+    "first-seen": map,
     "hash": hash,
     "zero": zero,
 }
