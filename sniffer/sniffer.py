@@ -136,6 +136,24 @@ def procces_packet(packet):
                 packet_counter[f"Total Packets {protocol.__name__}"] += 1  
                 if protocol in header_del_list :
                     packet[protocol].remove_payload()
+                    if recalculate_length:
+                        if protocol == IP:
+                            packet[IP].len = len(packet[IP])
+                        elif protocol == UDP:
+                            packet[UDP].len = len(packet[UDP])
+                        elif protocol == TCP:
+                            packet[TCP].dataofs = None # For TCP header length
+                        elif protocol == IPv6:
+                            packet[IPv6].plen = len(packet[IPv6].payload)
+                    if recalculate_checksum:
+                        if protocol == IP:
+                            del packet[IP].chksum
+                        elif protocol == UDP:
+                            del packet[UDP].chksum
+                        elif protocol == TCP:
+                            del packet[TCP].chksum
+                        elif protocol == IPv6:
+                            pass
     if any(protocol in packet for protocol in protocol_list):
         wrpcap(pcap_filename, packet, append=True, sync=True)
     
@@ -325,6 +343,8 @@ if __name__ == "__main__":
         anonymize=config.getboolean('General','Anonymize',fallback=True)
         cipher=valid_option(config,'General','Cipher',"none",list(ciphers.ciphers_modes.keys()))
         disk=config.getboolean('General','Disk',fallback=True)
+        recalculate_length=config.getboolean('General','ReLength',fallback=False)
+        recalculate_checksum=ocnfig.getboolean('General','ReChecksum',fallback=False)
         if disk:
             diskpath=config.get('General','DiskPath',fallback=".")
             os.makedirs(diskpath, exist_ok=True)
