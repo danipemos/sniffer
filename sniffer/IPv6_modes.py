@@ -21,7 +21,7 @@ def regexf(packet):
             packet[IPv6].dst = re.sub(regex, repl, packet[IPv6].dst)
     return packet
 
-def random(packet):
+def randomipv6(packet):
     if IPv6 in packet:
         packet[IPv6].src = ipaddress.IPv6Address(random.randint(0, 2**128 - 1))
         packet[IPv6].dst = ipaddress.IPv6Address(random.randint(0, 2**128 - 1))
@@ -75,7 +75,7 @@ modes6 = {
     "hash": hash,
     "zero": zero,
     "mask": mask,
-    "random": random,
+    "random": randomipv6,
     "regex": regexf,
 }
 

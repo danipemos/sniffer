@@ -135,7 +135,7 @@ def procces_packet(packet):
                     session_dict[inverse_key]["packet count"] += 1
                     session_dict[inverse_key]["total_size"] += len(packet)        
         header_del_list = headers.get(header_ptr)
-        if HTTP in packet:
+        if HTTP in packet and http_anonymize:
             http_layer = packet[HTTP]
             # Anonimizar URL
             if hasattr(http_layer, 'Host') and hasattr(http_layer, 'Path'):
@@ -151,6 +151,22 @@ def procces_packet(packet):
                 if 'Authorization' in http_layer.fields:
                     auth_val = http_layer.fields['Authorization']
                     http_layer.fields['Authorization'] = ''.join(random.choices(string.ascii_letters, k=len(str(auth_val))))
+        if DNS in packet and dns_anonymize:
+            dns_layer = packet[DNS]
+            # Anonimizar nombres de dominio en consultas
+            if dns_layer.qdcount > 0 and hasattr(dns_layer, 'qd'):
+                for i in range(dns_layer.qdcount):
+                    qname = dns_layer.qd[i].qname.decode() if isinstance(dns_layer.qd[i].qname, bytes) else dns_layer.qd[i].qname
+                    fake_domain = ''.join(random.choices(string.ascii_lowercase, k=len(qname.split('.')[0]))) + '.' + '.'.join(qname.split('.')[1:])
+                    dns_layer.qd[i].qname = fake_domain
+            # Anonimizar respuestas DNS
+            if dns_layer.ancount > 0 and hasattr(dns_layer, 'an'):
+                for i in range(dns_layer.ancount):
+                    rdata = dns_layer.an[i].rdata
+                    if isinstance(rdata, bytes):
+                        rdata = rdata.decode()
+                    fake_rdata = ''.join(random.choices(string.ascii_lowercase + string.digits, k=len(rdata)))
+                    dns_layer.an[i].rdata = fake_rdata
         for protocol in protocol_list:
             if protocol in packet:
                 packet_counter[f"Total Packets {protocol.__name__}"] += 1  
@@ -363,8 +379,10 @@ if __name__ == "__main__":
         anonymize=config.getboolean('General','Anonymize',fallback=True)
         cipher=valid_option(config,'General','Cipher',"none",list(ciphers.ciphers_modes.keys()))
         disk=config.getboolean('General','Disk',fallback=True)
-        recalculate_length=config.getboolean('General','ReLength',fallback=False)
-        recalculate_checksum=ocnfig.getboolean('General','ReChecksum',fallback=False)
+        recalculate_length=config.getboolean('General','ReLength',fallback=True)
+        recalculate_checksum=config.getboolean('General','ReChecksum',fallback=True)
+        http_anonymize=config.getboolean('General','HttpAnonymize',fallback=True)
+        dns_anonymize=config.getboolean('General','DnsAnonymize',fallback=True)
         if disk:
             diskpath=config.get('General','DiskPath',fallback=".")
             os.makedirs(diskpath, exist_ok=True)

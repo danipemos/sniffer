@@ -20,7 +20,7 @@ def regexf(packet):
             packet[IP].dst = re.sub(regex, repl, packet[IP].dst)
     return packet
 
-def random(packet):
+def randomip(packet):
     if IP in packet:
         packet[IP].src = ipaddress.IPv4Address(random.randint(0, 2**32 - 1))
         packet[IP].dst = ipaddress.IPv4Address(random.randint(0, 2**32 - 1))
@@ -85,7 +85,7 @@ anon = {
     "first-seen": map,
     "hash": hash,
     "zero": zero,
-    "random": random,
+    "random": randomip,
     "regex": regexf,
     "mask": mask,
 }
