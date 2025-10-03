@@ -9,6 +9,36 @@ counter = 1
 config=configparser.ConfigParser()
 config.read(config_search.search_config())
 hashIpv6=config.get('General','HashMac',fallback='Secreto')
+import random
+regex_mac = config.get('General','RegexMac',fallback=None)
+repl_mac = config.get('General','ReplMac',fallback=None)
+
+def regexf(packet):
+    if Ether in packet:
+        if regex_mac and repl_mac:
+            packet[Ether].src = re.sub(regex_mac, repl_mac, packet[Ether].src)
+            packet[Ether].dst = re.sub(regex_mac, repl_mac, packet[Ether].dst)
+    return packet
+
+def randomf(packet):
+    if Ether in packet:
+        def rand_mac():
+            return ':'.join(f'{random.randint(0,255):02x}' for _ in range(6))
+        packet[Ether].src = rand_mac()
+        packet[Ether].dst = rand_mac()
+    return packet
+
+def mask(packet):
+    if Ether in packet:
+        def mask_mac(mac):
+            # Mantener solo los 3 primeros octetos, resto a 00
+            parts = mac.split(':')
+            if len(parts) == 6:
+                return parts[0] + ':' + parts[1] + ':' + parts[2] + ':00:00:00'
+            return mac
+        packet[Ether].src = mask_mac(packet[Ether].src)
+        packet[Ether].dst = mask_mac(packet[Ether].dst)
+    return packet
 
 def hash(packet):
     if Ether in packet:
@@ -52,4 +82,7 @@ modesMac = {
     "first-seen": map,
     "hash": hash,
     "zero": zero,
+    "regex": regexf,
+    "random": randomf,
+    "mask": mask,
 }

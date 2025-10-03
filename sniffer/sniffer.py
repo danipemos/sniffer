@@ -17,6 +17,7 @@ import json
 from zabbix_utils import Sender,ItemValue
 import config_search
 import re
+import random, string
 class pcap_pkthdr(ctypes.Structure):
     _fields_ = [("ts_sec", ctypes.c_long),
                 ("ts_usec", ctypes.c_long),
@@ -47,10 +48,13 @@ headers = {
     "icmp": [ICMP],
     "transport": [TCP, UDP, ICMP],
     "dns": [DNS],
+    "http": [HTTP],
+    "aplication": [DNS, HTTP],
+    "all": [IP, IPv6, TCP, UDP, ICMP, DNS, HTTP],
     "none": [],
 }
 
-protocol_list=[IP,IPv6,UDP,TCP,ICMP,DNS]
+protocol_list=[IP,IPv6,UDP,TCP,ICMP,DNS,HTTP]
 
 
 def get_pcap_name():
@@ -131,6 +135,22 @@ def procces_packet(packet):
                     session_dict[inverse_key]["packet count"] += 1
                     session_dict[inverse_key]["total_size"] += len(packet)        
         header_del_list = headers.get(header_ptr)
+        if HTTP in packet:
+            http_layer = packet[HTTP]
+            # Anonimizar URL
+            if hasattr(http_layer, 'Host') and hasattr(http_layer, 'Path'):
+                fake_url = ''.join(random.choices(string.ascii_letters, k=len(http_layer.Path)))
+                http_layer.Path = fake_url
+            # Anonimizar cabeceras
+            if hasattr(http_layer, 'fields'):
+                # Cookies
+                if 'Cookie' in http_layer.fields:
+                    cookie_val = http_layer.fields['Cookie']
+                    http_layer.fields['Cookie'] = ''.join(random.choices(string.ascii_letters, k=len(str(cookie_val))))
+                # Authorization
+                if 'Authorization' in http_layer.fields:
+                    auth_val = http_layer.fields['Authorization']
+                    http_layer.fields['Authorization'] = ''.join(random.choices(string.ascii_letters, k=len(str(auth_val))))
         for protocol in protocol_list:
             if protocol in packet:
                 packet_counter[f"Total Packets {protocol.__name__}"] += 1  
